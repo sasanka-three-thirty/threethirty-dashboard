@@ -266,6 +266,7 @@
           <thead>
             <tr>
               <th>School</th>
+              <th>Activities</th>
               <th class="center">Instructors</th>
               <th class="center">Sessions</th>
               <th class="center">Missed</th>
@@ -406,9 +407,12 @@ function render() {
   var schoolMap = {};
   sessions.forEach(function(s) {
     if (!s.school || s.school === 'Unknown') return;
-    if (!schoolMap[s.school]) schoolMap[s.school] = { sessions: 0, instructors: {}, lateSum: 0, lateCount: 0, missed: 0 };
+    if (!schoolMap[s.school]) schoolMap[s.school] = { sessions: 0, instructors: {}, lateSum: 0, lateCount: 0, missed: 0, activities: {} };
     schoolMap[s.school].sessions++;
     schoolMap[s.school].instructors[s.userId] = true;
+    if (s.activity && s.activity !== 'Unknown' && s.activity !== '') {
+      schoolMap[s.school].activities[s.activity] = true;
+    }
     if (s.minsLate > 0) { schoolMap[s.school].lateSum += s.minsLate; schoolMap[s.school].lateCount++; }
   });
 
@@ -437,15 +441,20 @@ function render() {
     var instCount  = Object.keys(s.instructors).length;
     var avgLate    = s.lateCount > 0 ? Math.round(s.lateSum / s.lateCount) : 0;
     var missCount  = (s.missed || 0) + (s.cancelled || 0);
-    return { name: name, instCount: instCount, sessions: s.sessions, missed: s.missed || 0, cancelled: s.cancelled || 0, avgLate: avgLate, total: missCount };
+    var activities = Object.keys(s.activities || {});
+    return { name: name, instCount: instCount, sessions: s.sessions, missed: s.missed || 0, cancelled: s.cancelled || 0, avgLate: avgLate, total: missCount, activities: activities };
   }).sort(function(a, b) { return b.instCount - a.instCount; });
 
   document.getElementById('school-count').textContent = schoolList.length + ' schools';
 
   var tbody = document.getElementById('schools-tbody');
   tbody.innerHTML = schoolList.map(function(s) {
+    var activityTags = s.activities.length > 0
+      ? s.activities.map(function(a) { return '<span class="badge cover" style="margin-right:3px;">' + a + '</span>'; }).join('')
+      : '<span style="color:var(--text3);font-size:11px;">—</span>';
     return '<tr>'
       + '<td class="name">' + s.name + '</td>'
+      + '<td>' + activityTags + '</td>'
       + '<td class="center mono">' + s.instCount + '</td>'
       + '<td class="center mono">' + s.sessions + '</td>'
       + '<td class="center mono" style="color:' + (s.missed > 0 ? '#f06060' : 'inherit') + ';">' + s.missed + '</td>'
