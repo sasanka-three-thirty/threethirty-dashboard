@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three Thirty · Ops Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0d0d1a;
+    --navy2: #13131f;
+    --navy3: #1a1a2e;
+    --coral: #e8533a;
+    --coral2: #c43d27;
+    --green: #1a9e6e;
+    --amber: #c47f17;
+    --red: #d63b3b;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f0;
+    --text2: rgba(255,255,255,0.55);
+    --text3: rgba(255,255,255,0.28);
+    --card: rgba(255,255,255,0.04);
+    --card2: rgba(255,255,255,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--navy2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #fff;
+  }
+  .brand-name { font-size: 14px; font-weight: 500; color: var(--text); letter-spacing: -0.2px; }
+  .brand-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .filter-group { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+  .filter-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 500;
+    color: var(--text2); background: transparent;
+    border: none; border-radius: 5px;
+    padding: 5px 12px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--coral); color: #fff; }
+  .filter-btn:hover:not(.active) { color: var(--text); background: var(--card2); }
+  .last-updated { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+  /* TABS */
+  .tabs {
+    background: var(--navy2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex; gap: 0;
+  }
+  .tab {
+    font-size: 12px; font-weight: 500;
+    color: var(--text3);
+    padding: 14px 18px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--coral); }
+  .tab:hover:not(.active) { color: var(--text2); }
+  .tab-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--coral); opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .tab.active .tab-dot { opacity: 1; }
+
+  /* CONTENT */
+  .content { padding: 24px 28px; max-width: 1400px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* METRICS ROW */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .metric:hover { border-color: var(--border2); }
+  .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric-value { font-size: 32px; font-weight: 600; line-height: 1; letter-spacing: -1px; }
+  .metric-value.green { color: var(--green); }
+  .metric-value.red { color: var(--red); }
+  .metric-value.amber { color: var(--amber); }
+  .metric-value.coral { color: var(--coral); }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 6px; }
+  .metric-accent {
+    position: absolute; right: -10px; bottom: -10px;
+    width: 60px; height: 60px; border-radius: 50%;
+    opacity: 0.06;
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card-title {
+    font-size: 12px; font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 16px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-count { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+  /* TABLE */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th {
+    text-align: left; padding: 8px 10px;
+    font-size: 10px; font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tbl td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: var(--card2); }
+  .tbl .name { color: var(--text); font-weight: 500; }
+  .tbl .mono { font-family: 'DM Mono', monospace; font-size: 11px; }
+  .tbl .center { text-align: center; }
+
+  /* BADGES */
+  .badge {
+    display: inline-flex; align-items: center;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .badge.green { background: rgba(26,158,110,0.15); color: #2ecf8f; }
+  .badge.amber { background: rgba(196,127,23,0.15); color: #e8a020; }
+  .badge.red   { background: rgba(214,59,59,0.15);  color: #f06060; }
+  .badge.cover { background: rgba(232,83,58,0.12); color: var(--coral); }
+
+  /* BARS */
+  .bar-list { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-name { font-size: 11px; color: var(--text2); width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .bar-val { font-size: 11px; font-family: 'DM Mono', monospace; width: 30px; text-align: right; flex-shrink: 0; }
+
+  /* LOADING */
+  .loading {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 60vh; gap: 16px;
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--coral);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--text3); }
+
+  /* ERROR */
+  .error-box {
+    background: rgba(214,59,59,0.08);
+    border: 1px solid rgba(214,59,59,0.2);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 24px 28px;
+    font-size: 13px; color: #f06060;
+  }
+  .error-box strong { display: block; margin-bottom: 6px; font-size: 14px; }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* EMPTY */
+  .empty { font-size: 12px; color: var(--text3); text-align: center; padding: 24px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">TT</div>
+    <div>
+      <div class="brand-name">Three Thirty</div>
+      <div class="brand-sub">Ops Dashboard</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="last-updated" id="last-updated">Loading...</span>
+    <div class="filter-group">
+      <button class="filter-btn active" onclick="setFilter('yesterday', this)">Yesterday</button>
+      <button class="filter-btn" onclick="setFilter('week', this)">This week</button>
+      <button class="filter-btn" onclick="setFilter('term', this)">This term</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="setTab('schools', this)">
+    <div class="tab-dot"></div>
+    Schools
+  </div>
+  <div class="tab" onclick="setTab('instructors', this)">
+    <div class="tab-dot"></div>
+    Instructors
+  </div>
+</div>
+
+<div class="content">
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Fetching live data from Connecteam...</div>
+  </div>
+
+  <div id="error-box" class="error-box" style="display:none;">
+    <strong>Could not load data</strong>
+    <span id="error-msg"></span>
+  </div>
+
+  <!-- SCHOOLS VIEW -->
+  <div class="view" id="view-schools" style="display:none;">
+    <div class="metrics" id="schools-metrics"></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">
+          School performance
+          <span class="card-count" id="school-count"></span>
+        </div>
+        <table class="tbl" id="schools-table">
+          <thead>
+            <tr>
+              <th>School</th>
+              <th class="center">Instructors</th>
+              <th class="center">Sessions</th>
+              <th class="center">Missed</th>
+              <th class="center">Cancelled</th>
+              <th class="center">Avg lateness</th>
+            </tr>
+          </thead>
+          <tbody id="schools-tbody"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Instructor count per school</div>
+        <div class="bar-list" id="schools-bars"></div>
+        <hr class="divider">
+        <div class="card-title" style="margin-top:4px;">Missed + cancelled per school</div>
+        <div class="bar-list" id="schools-miss-bars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTRUCTORS VIEW -->
+  <div class="view" id="view-instructors" style="display:none;">
+    <div class="metrics" id="instructors-metrics"></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">
+          Instructor performance
+          <span class="card-count" id="instructor-count"></span>
+        </div>
+        <table class="tbl" id="instructors-table">
+          <thead>
+            <tr>
+              <th>Instructor</th>
+              <th class="center">Delivered</th>
+              <th class="center">Covers</th>
+              <th class="center">On-time</th>
+              <th class="center">Avg lateness</th>
+              <th class="center">Attendance</th>
+            </tr>
+          </thead>
+          <tbody id="instructors-tbody"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Avg lateness ranking</div>
+        <div class="bar-list" id="lateness-bars"></div>
+        <hr class="divider">
+        <div class="card-title" style="margin-top:4px;">Covers requested</div>
+        <div class="bar-list" id="covers-bars"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var API_URL = 'https://script.google.com/macros/s/AKfycbz5vKe7uE60-1HZl5lbnNeEwlR6501aaG9a3aQZvwvVVHVUFUxYX5sDOSnpxgz_Nco3zg/exec';
+var allData = null;
+var currentFilter = 'yesterday';
+var currentTab = 'schools';
+
+function parseDate(str) {
+  if (!str) return null;
+  var p = str.split('/');
+  if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+  return null;
+}
+
+function getDateRange(filter) {
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+
+  if (filter === 'yesterday') {
+    return { from: yesterday, to: yesterday };
+  } else if (filter === 'week') {
+    var weekAgo = new Date(today); weekAgo.setDate(today.getDate() - 7);
+    return { from: weekAgo, to: yesterday };
+  } else {
+    // This term — roughly last 14 weeks
+    var termStart = new Date(today); termStart.setDate(today.getDate() - 98);
+    return { from: termStart, to: yesterday };
+  }
+}
+
+function inRange(dateStr, range) {
+  var d = parseDate(dateStr);
+  if (!d) return false;
+  return d >= range.from && d <= range.to;
+}
+
+function minsLateColor(m) {
+  if (m <= 0) return '#2ecf8f';
+  if (m <= 5) return '#e8a020';
+  if (m <= 10) return '#e8a020';
+  return '#f06060';
+}
+
+function minsLateLabel(m) {
+  if (m === 0) return '<span class="badge green">On time</span>';
+  if (m > 0 && m <= 5) return '<span class="badge amber">+' + m + 'm</span>';
+  if (m > 5) return '<span class="badge red">+' + m + 'm</span>';
+  return '<span class="badge green">' + m + 'm early</span>';
+}
+
+function renderMetrics(containerId, cards) {
+  var el = document.getElementById(containerId);
+  el.innerHTML = cards.map(function(c) {
+    return '<div class="metric fade-in">'
+      + '<div class="metric-label">' + c.label + '</div>'
+      + '<div class="metric-value ' + (c.cls || '') + '">' + c.value + '</div>'
+      + (c.sub ? '<div class="metric-sub">' + c.sub + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function renderBars(containerId, items, maxVal, colorFn) {
+  var el = document.getElementById(containerId);
+  if (!items.length) { el.innerHTML = '<div class="empty">No data</div>'; return; }
+  el.innerHTML = items.slice(0, 8).map(function(item) {
+    var pct = maxVal > 0 ? (item.val / maxVal * 100) : 0;
+    var color = colorFn ? colorFn(item.val) : '#e8533a';
+    return '<div class="bar-row">'
+      + '<div class="bar-name" title="' + item.name + '">' + item.name + '</div>'
+      + '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(pct) + '%;background:' + color + ';"></div></div>'
+      + '<div class="bar-val" style="color:' + color + ';">' + item.display + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function render() {
+  if (!allData) return;
+  var range = getDateRange(currentFilter);
+
+  var sessions  = allData.sessions.filter(function(s) { return inRange(s.date, range); });
+  var cancelled = allData.cancelled.filter(function(c) { return inRange(c.date, range); });
+
+  // --- SCHOOLS ---
+  var schoolMap = {};
+  sessions.forEach(function(s) {
+    if (!s.school || s.school === 'Unknown') return;
+    if (!schoolMap[s.school]) schoolMap[s.school] = { sessions: 0, instructors: {}, lateSum: 0, lateCount: 0, missed: 0 };
+    schoolMap[s.school].sessions++;
+    schoolMap[s.school].instructors[s.userId] = true;
+    if (s.minsLate > 0) { schoolMap[s.school].lateSum += s.minsLate; schoolMap[s.school].lateCount++; }
+  });
+
+  cancelled.forEach(function(c) {
+    if (!c.school || c.school === 'Unknown') return;
+    if (!schoolMap[c.school]) schoolMap[c.school] = { sessions: 0, instructors: {}, lateSum: 0, lateCount: 0, missed: 0, cancelled: 0 };
+    if (c.type === 'Cancelled') { schoolMap[c.school].cancelled = (schoolMap[c.school].cancelled || 0) + 1; }
+    else { schoolMap[c.school].missed = (schoolMap[c.school].missed || 0) + 1; }
+  });
+
+  var totalMissed    = cancelled.filter(function(c) { return c.type === 'Missed'; }).length;
+  var totalCancelled = cancelled.filter(function(c) { return c.type === 'Cancelled'; }).length;
+  var totalLate      = sessions.filter(function(s) { return s.minsLate > 0; }).length;
+  var onTimeRate     = sessions.length > 0 ? Math.round((sessions.length - totalLate) / sessions.length * 100) : 0;
+  var totalSchools   = Object.keys(schoolMap).length;
+
+  renderMetrics('schools-metrics', [
+    { label: 'Active schools', value: totalSchools },
+    { label: 'Total sessions', value: sessions.length, cls: 'coral' },
+    { label: 'Missed sessions', value: totalMissed, cls: totalMissed > 0 ? 'red' : '' },
+    { label: 'On-time rate', value: onTimeRate + '%', cls: onTimeRate >= 85 ? 'green' : onTimeRate >= 70 ? 'amber' : 'red' }
+  ]);
+
+  var schoolList = Object.keys(schoolMap).map(function(name) {
+    var s = schoolMap[name];
+    var instCount  = Object.keys(s.instructors).length;
+    var avgLate    = s.lateCount > 0 ? Math.round(s.lateSum / s.lateCount) : 0;
+    var missCount  = (s.missed || 0) + (s.cancelled || 0);
+    return { name: name, instCount: instCount, sessions: s.sessions, missed: s.missed || 0, cancelled: s.cancelled || 0, avgLate: avgLate, total: missCount };
+  }).sort(function(a, b) { return b.instCount - a.instCount; });
+
+  document.getElementById('school-count').textContent = schoolList.length + ' schools';
+
+  var tbody = document.getElementById('schools-tbody');
+  tbody.innerHTML = schoolList.map(function(s) {
+    return '<tr>'
+      + '<td class="name">' + s.name + '</td>'
+      + '<td class="center mono">' + s.instCount + '</td>'
+      + '<td class="center mono">' + s.sessions + '</td>'
+      + '<td class="center mono" style="color:' + (s.missed > 0 ? '#f06060' : 'inherit') + ';">' + s.missed + '</td>'
+      + '<td class="center mono" style="color:' + (s.cancelled > 0 ? '#e8a020' : 'inherit') + ';">' + s.cancelled + '</td>'
+      + '<td class="center">' + minsLateLabel(s.avgLate) + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var maxInst = Math.max.apply(null, schoolList.map(function(s) { return s.instCount; })) || 1;
+  renderBars('schools-bars', schoolList.slice(0,8).map(function(s) {
+    return { name: s.name, val: s.instCount, display: s.instCount };
+  }), maxInst, function(v) { return v >= 4 ? '#f06060' : v >= 2 ? '#e8a020' : '#2ecf8f'; });
+
+  var maxMiss = Math.max.apply(null, schoolList.map(function(s) { return s.total; })) || 1;
+  renderBars('schools-miss-bars', schoolList.filter(function(s) { return s.total > 0; }).slice(0,8).map(function(s) {
+    return { name: s.name, val: s.total, display: s.total };
+  }), maxMiss, function() { return '#f06060'; });
+
+  // --- INSTRUCTORS ---
+  var instrMap = {};
+  sessions.forEach(function(s) {
+    if (!s.instructor || s.instructor === 'Unknown') return;
+    if (!instrMap[s.instructor]) instrMap[s.instructor] = { delivered: 0, covers: 0, lateSum: 0, lateCount: 0, onTime: 0 };
+    instrMap[s.instructor].delivered++;
+    if (s.isCover === 'Yes') instrMap[s.instructor].covers++;
+    if (s.minsLate > 0) { instrMap[s.instructor].lateSum += s.minsLate; instrMap[s.instructor].lateCount++; }
+    else { instrMap[s.instructor].onTime++; }
+  });
+
+  var totalInstructors  = Object.keys(instrMap).length;
+  var totalDelivered    = sessions.length;
+  var totalCovers       = sessions.filter(function(s) { return s.isCover === 'Yes'; }).length;
+  var instrOnTimeRate   = sessions.length > 0 ? Math.round((sessions.length - totalLate) / sessions.length * 100) : 0;
+
+  renderMetrics('instructors-metrics', [
+    { label: 'Active instructors', value: totalInstructors },
+    { label: 'Classes delivered', value: totalDelivered, cls: 'green' },
+    { label: 'Covers requested', value: totalCovers, cls: totalCovers > 0 ? 'amber' : '' },
+    { label: 'On-time rate', value: instrOnTimeRate + '%', cls: instrOnTimeRate >= 85 ? 'green' : instrOnTimeRate >= 70 ? 'amber' : 'red' }
+  ]);
+
+  var instrList = Object.keys(instrMap).map(function(name) {
+    var ins = instrMap[name];
+    var avgLate   = ins.lateCount > 0 ? Math.round(ins.lateSum / ins.lateCount) : 0;
+    var onTimePct = ins.delivered > 0 ? Math.round(ins.onTime / ins.delivered * 100) : 100;
+    return { name: name, delivered: ins.delivered, covers: ins.covers, avgLate: avgLate, onTimePct: onTimePct };
+  }).sort(function(a, b) { return b.delivered - a.delivered; });
+
+  document.getElementById('instructor-count').textContent = instrList.length + ' instructors';
+
+  var itbody = document.getElementById('instructors-tbody');
+  itbody.innerHTML = instrList.map(function(ins) {
+    var attendBadge = ins.onTimePct === 100
+      ? '<span class="badge green">100%</span>'
+      : ins.onTimePct >= 85
+        ? '<span class="badge amber">' + ins.onTimePct + '%</span>'
+        : '<span class="badge red">' + ins.onTimePct + '%</span>';
+    var coverBadge = ins.covers > 0 ? '<span class="badge cover">' + ins.covers + '</span>' : '<span style="color:var(--text3);font-size:11px;">—</span>';
+    return '<tr>'
+      + '<td class="name">' + ins.name + '</td>'
+      + '<td class="center mono">' + ins.delivered + '</td>'
+      + '<td class="center">' + coverBadge + '</td>'
+      + '<td class="center">' + attendBadge + '</td>'
+      + '<td class="center">' + minsLateLabel(ins.avgLate) + '</td>'
+      + '<td class="center mono">' + ins.onTimePct + '%</td>'
+      + '</tr>';
+  }).join('');
+
+  var lateList = instrList.filter(function(i) { return i.avgLate > 0; }).sort(function(a,b) { return b.avgLate - a.avgLate; });
+  var maxLate = lateList.length > 0 ? lateList[0].avgLate : 1;
+  renderBars('lateness-bars', lateList.slice(0,8).map(function(i) {
+    return { name: i.name, val: i.avgLate, display: '+' + i.avgLate + 'm' };
+  }), maxLate, function(v) { return v > 10 ? '#f06060' : '#e8a020'; });
+
+  var coverList = instrList.filter(function(i) { return i.covers > 0; }).sort(function(a,b) { return b.covers - a.covers; });
+  var maxCovers = coverList.length > 0 ? coverList[0].covers : 1;
+  renderBars('covers-bars', coverList.slice(0,8).map(function(i) {
+    return { name: i.name, val: i.covers, display: i.covers + '' };
+  }), maxCovers, function() { return '#e8533a'; });
+
+  document.getElementById('view-schools').style.display    = currentTab === 'schools'     ? 'block' : 'none';
+  document.getElementById('view-instructors').style.display = currentTab === 'instructors' ? 'block' : 'none';
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  render();
+}
+
+function setTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  render();
+}
+
+function loadData() {
+  fetch(API_URL)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      allData = data;
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      render();
+    })
+    .catch(function(err) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-box').style.display = 'block';
+      document.getElementById('error-msg').textContent = 'Make sure the Apps Script is deployed and you are signed into your Google account. Error: ' + err.message;
+    });
+}
+
+loadData();
+</script>
+</body>
+</html>
